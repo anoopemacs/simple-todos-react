@@ -1,10 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
+import { Meteor } from 'meteor/meteor';
 import { createContainer } from 'meteor/react-meteor-data';
 
 import { Tasks } from '../api/tasks.js';
 
 import Task from './Task.jsx';
+import AccountsUIWrapper from './AccountsUIWrapper.jsx';
 
 // App component - represents the whole app
 
@@ -28,6 +30,8 @@ class App extends Component {
     Tasks.insert({
       text: text,
       createdAt: new Date(),
+      owner: Meteor.userId(),
+      username: Meteor.user().username,
     });
     ReactDOM.findDOMNode(this.refs.textInput).value = "";
     ReactDOM.findDOMNode(this.refs.textInput).focus();
@@ -50,14 +54,17 @@ class App extends Component {
 	    <input type="checkbox" readOnly checked={this.state.hideCompleted} onClick={this.toggleHideCompleted.bind(this)} />
 	    Hide Completed Tasks
 	  </label>
+	  <AccountsUIWrapper />
+	  { this.props.currentUser?
 	  <form className="new-task" onSubmit={this.handleSubmit.bind(this)} >
 	    <input
 	       type="text"
 	       ref="textInput"
 	       placeholder="Type to add new tasks"
 	    />
-	  </form>
-	      
+	  </form> : ''
+	  }
+	  
 	</header>
 
 	<ul>
@@ -78,5 +85,6 @@ export default createContainer(() => {
   return {
     tasks: Tasks.find({}, { sort: { createdAt: -1 } }).fetch(),
     incompleteCount: Tasks.find({ checked: { $ne: true } }).count(),
+    currentUser: Meteor.user(),
   };
 }, App);
